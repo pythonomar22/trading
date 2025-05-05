@@ -1,0 +1,90 @@
+Project Documentation: Algorithmic Kalshi Trading Backtester
+
+**1. Project Goal**
+
+To develop and backtest algorithmic trading strategies for event contracts listed on the Kalshi prediction market platform (kalshi.com), aiming to identify and exploit potential mispricings or predictable patterns. The initial motivation stems from a quantitative research internship challenge involving trading $500 on Kalshi.
+
+**2. Motivation & Context**
+
+Kalshi offers contracts based on the outcome of real-world events (economic indicators, weather, politics, etc.). These contracts trade between $0.01 and $0.99, representing the market's perceived probability of the event occurring. Prices fluctuate based on new information and trader activity. This project aims to use data analysis and quantitative techniques to develop strategies that can systematically generate profit by trading these contracts. The immediate context is an internship task, but the broader goal is to explore algorithmic trading in prediction markets.
+
+**3. Core Concept**
+
+The system focuses on:
+    a) Ingesting relevant data (e.g., underlying event data like weather forecasts or financial index prices, and Kalshi contract price data).
+    b) Implementing trading strategies that analyze this data to estimate the "true" probability of a contract resolving to YES.
+    c) Comparing the strategy's estimated probability to the market's implied probability (derived from bid/ask prices).
+    d) Generating trade signals (BUY YES, BUY NO) when a significant discrepancy (potential mispricing) is identified.
+    e) Simulating the execution of these trades against historical data to evaluate strategy performance before live deployment.
+
+**4. Current Implementation - Backtesting Framework**
+
+A Python-based backtesting framework has been developed to simulate strategy performance.
+
+    **4.1. Overall Purpose:**
+    The framework takes historical market data and strategy logic as input, simulates the process of making trades over time, tracks portfolio performance (cash, positions, P&L), and provides results for analysis.
+
+    **4.2. Directory Structure:**
+    kalshi_backtester/
+    ├── data/                     # Stores historical data files (currently placeholder CSV)
+    ├── backtester/               # Core framework components
+    │   ├── data_handler.py       # Loads and streams historical data
+    │   ├── engine.py             # Main backtesting loop orchestration
+    │   ├── execution.py          # Simulates order execution and fees
+    │   ├── portfolio.py          # Manages portfolio state (cash, positions, PnL, settlement)
+    │   └── performance.py        # (Planned) Calculates performance metrics
+    ├── strategies/               # Strategy implementations
+    │   ├── base_strategy.py      # Abstract base class for strategies
+    │   └── temperature.py        # Current Temperature strategy implementation
+    ├── utils/                    # (Planned) Utility functions
+    ├── config.py                 # Configuration (paths, parameters, fees)
+    └── run_backtest.py           # Main script to configure and run a backtest
+
+    **4.3. Component Breakdown:**
+        *   `run_backtest.py`: Entry point. Initializes all components based on `config.py` and starts the `BacktestingEngine`. Displays final results.
+        *   `config.py`: Central place for setting parameters like data paths, initial cash, date ranges, fees, and strategy-specific parameters.
+        *   `backtester/data_handler.py`: Loads data from CSV files located in the `data/` directory. Expects a timestamp index and specific column names. Provides data tick-by-tick to the engine. Handles date parsing.
+        *   `backtester/engine.py`: The main simulation loop. Gets data ticks, calls the strategy for signals, passes signals to the portfolio, passes resulting orders to the execution handler, passes fills back to the portfolio, and handles MTM updates and final settlement.
+        *   `strategies/base_strategy.py`: Defines the interface that all strategy classes must implement (`generate_signals` method).
+        *   `strategies/temperature.py`: The currently implemented strategy. Analyzes weather forecasts and observed temperatures against Kalshi temperature bracket market prices.
+        *   `backtester/portfolio.py`: Tracks cash balance and contract positions for each market ticker. Processes signals into potential orders. Updates its state based on fill events received from the execution handler. Calculates mark-to-market portfolio value and handles final position settlement based on outcome data.
+        *   `backtester/execution.py`: Takes an order and current market prices, simulates whether the order would fill (based on market/limit logic and available prices), calculates execution price, and applies trading fees based on the model defined in `config.py`. Returns a fill event if successful.
+
+    **4.4 Flow:**
+    `run_backtest.py` -> Creates `DataHandler`, `Strategy`, `Portfolio`, `ExecutionHandler` -> Creates `BacktestingEngine` -> `Engine` runs loop: (`DataHandler` -> `Engine` -> `Strategy` -> `Engine` -> `Portfolio` -> `Engine` -> `ExecutionHandler` -> `Engine` -> `Portfolio`) -> `Engine` calls final `Portfolio.settle_positions` -> `run_backtest.py` displays results.
+
+**5. Implemented Strategy (Temperature)**
+
+    *   **Goal:** Trade Kalshi's daily high-temperature bracket contracts (e.g., "Highest temp in NYC today 62-63?").
+    *   **Inputs (from Data):** NWS high temperature forecast (`nws_forecast_high`), highest observed temperature so far (`observed_temp_high_so_far`), Kalshi bracket market bid/ask prices (e.g., `kalshi_bracket_62_63_yes_bid`, `kalshi_bracket_62_63_no_ask`).
+    *   **Logic:**
+        1.  For each target bracket defined in `config.py`:
+        2.  Estimate the probability of the final high temperature falling within the bracket using a normal distribution (`scipy.stats.norm.cdf`). The distribution is centered on the `nws_forecast_high` with a standard deviation (`forecast_std_dev` from config) representing forecast uncertainty.
+        3.  The probability calculation is constrained by the `observed_temp_high_so_far` – the probability of the high falling below the already observed high is zero.
+        4.  Compare this `estimated_prob_yes` with the market's implied probability (derived from current bid/ask prices, currently using comparison against `yes_ask_price` for buying YES and `yes_bid_price` for buying NO).
+        5.  If the absolute difference between the estimated probability and the relevant market price (ask for buying YES, bid for selling YES/buying NO) exceeds a `confidence_threshold` (from config):
+            *   Generate a BUY YES signal if the estimate is significantly higher than the market ask.
+            *   Generate a BUY NO signal if the estimate is significantly lower than the market bid.
+        6.  Signals include quantity (`trade_quantity` from config) and are currently simulated as MARKET orders.
+        7.  Basic position limits (`max_position_per_bracket`) are checked before generating signals.
+
+**6. Data**
+
+    *   **Current:** The system currently runs using a small, manually created placeholder CSV file (`data/combined_market_data.csv`). This file includes fabricated timestamped data for NWS forecasts, observed highs, Kalshi bracket bid/asks, and a final settlement temperature. **The results from this data are purely illustrative of the framework's function, not indicative of real performance.**
+    *   **Required:** For meaningful backtesting, real historical data is essential. This requires:
+        *   **Kalshi Data:** Timestamped historical bid/ask price data for the specific Kalshi contracts being tested (e.g., `TEMP-NYC-24APR15-B62.5`). This needs to be sourced, potentially via the official Kalshi API or other means. Resolution should be frequent (e.g., minutes or seconds).
+        *   **Underlying Data:** Timestamped historical data corresponding to the Kalshi contract's underlying event.
+            *   *For Temperature:* Historical NWS forecasts (e.g., hourly max temp predictions for KNYC), historical NWS actual observations (minute or 5-minute resolution for KNYC if possible), and the official Daily Climatological Report high for settlement.
+            *   *For SPX Volatility:* Historical minute-resolution SPY price/volume data and SPX index price data.
+        *   **Format:** The data needs to be cleaned, merged based on timestamp, and formatted into a single CSV or DataFrame per backtest run, with columns matching the names expected by `DataHandler`, `Engine._extract_prices_from_data`, and the `Strategy` (e.g., `nws_forecast_high`, `kalshi_bracket_62_63_yes_bid`, `actual_settlement_high`, etc.).
+
+**7. Current Status & Results**
+
+    *   The backtesting framework successfully runs end-to-end with the placeholder data.
+    *   It loads data, generates signals based on the Temperature strategy, simulates market order execution with fees, updates portfolio state, and calculates final P&L based on settlement.
+    *   The current results on placeholder data show a loss, which is expected given the fabricated inputs.
+
+**8. Future Strategy Ideas**
+
+    *   **SPX Volatility:** Adapt the logic from the separate `kalshi-trading` codebase (which uses Random Forest to predict afternoon SPX volatility based on morning activity) into a new strategy class within this framework.
+    *   **Temperature Refinements:** Incorporate insights from the "Unofficial Guide to Temperature Markets" regarding NWS station types (hourly vs. 5-min), rounding errors, and the potential limitations of real-time NWS feeds for precise prediction. This could involve more complex probability modeling or focusing purely on pre-day forecasting.
