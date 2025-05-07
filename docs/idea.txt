@@ -1,90 +1,300 @@
-Project Documentation: Algorithmic Kalshi Trading Backtester
+Technical Guide for Kalshi S&P 500 Statistical Arbitrage Project
+Project Goal:
+To develop, backtest, and analyze a quantitative trading strategy that identifies and exploits perceived mispricings in Kalshi's daily S&P 500 price range event contracts.
+Core Idea (The "Statistical Arbitrage"):
+The "Underlying": The S&P 500 stock market index.
+The "Derivative": Kalshi offers event contracts where users can bet on whether the S&P 500 index will close within a specific price range at a specific time (e.g., "Will S&P 500 close between 5625-5649.99 today at 4 PM EDT?"). The price of a "Yes" contract (from 1¢ to 99¢) on Kalshi represents the market's implied probability of that event occurring.
+Our Edge (Hypothesis): We believe we can create a more accurate probabilistic forecast for the S&P 500's end-of-day (EOD) closing price range than what is implied by Kalshi's contract prices. Our model will be trained on historical S&P 500 data (the primary market). We hypothesize that Kalshi's market, due to its nature or participants, might price these range probabilities less efficiently or with a lag compared to our model's direct analysis of the S&P 500.
+The Strategy:
+Forecast: Use statistical/econometric models (e.g., GARCH for volatility) to predict the probability distribution of the S&P 500's EOD closing price.
+Calculate Model Probabilities: From this distribution, calculate the probability (
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+) that the S&P 500 will close within each specific range offered by Kalshi.
+Compare: Get the current market-implied probability (
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+) from Kalshi's "Yes" contract prices for the same ranges.
+Trade Signal: If there's a significant difference between 
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+ and 
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+ (e.g., 
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+ is much higher than 
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+ for a given range), it's a signal to buy the "Yes" contract for that range on Kalshi (or vice-versa). The aim is to profit from this perceived mispricing over many trades.
+Key Technical Components & Engineer's Role:
+You will be instrumental in building the software infrastructure for this strategy. The project involves several distinct modules:
+Data Ingestion and Management (data/ and src/data_handling/):
+Task: Implement robust pipelines to fetch, clean, store, and preprocess historical market data.
+Data Sources:
+S&P 500 index: Daily (Open, High, Low, Close, Volume).
+VIX index (volatility measure): Daily closing prices.
+Kalshi Contracts (CRITICAL & CHALLENGING): Historical data for S&P 500 daily range contracts. This includes:
+The exact price ranges offered for each historical day.
+The bid, ask, and last traded prices for "Yes" (and "No") contracts for these ranges, ideally with timestamps.
+Settlement times and outcomes.
+Engineer's Focus: Design a reliable way to acquire and store this Kalshi data. This might involve API integration (if Kalshi provides one for historical data), web scraping (with caution), or manual data collection and structuring for an initial proof-of-concept. Ensure data is correctly timestamped, aligned, and handled for missing values. Stored data should be easily accessible by other modules.
+Statistical Modeling (src/modeling/):
+Task: Implement statistical models to forecast S&P 500 volatility and its EOD price distribution.
+Models:
+Volatility Forecasting: Initially GARCH models (e.g., GARCH(1,1)). The quant team will provide the mathematical specifications.
+Distribution Fitting: Based on forecasted volatility, construct a probability distribution for the S&P 500's EOD price (e.g., Normal distribution, Student's t-distribution).
+Engineer's Focus: Implement these models in Python using libraries like statsmodels, arch, scipy.stats. Ensure models can be trained on historical data (rolling window approach to avoid lookahead bias) and can generate forecasts for future periods. The output of this module will be the probability of the S&P 500 closing in various potential price bands.
+Strategy Logic & Signal Generation (src/strategy/):
+Task: Translate model outputs and Kalshi market data into actionable trading signals.
+Logic:
+Take the model's probability for each Kalshi-defined range (
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+).
+Fetch the current Kalshi market-implied probability (
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+) for those same ranges.
+Compare 
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+ and 
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+. If the difference (the "edge") exceeds a predefined threshold (accounting for transaction costs), generate a buy/sell signal for the Kalshi contract.
+Engineer's Focus: Develop clean interfaces between the modeling module and this strategy module. Implement the logic for fetching Kalshi prices (this could be simulated from historical data during backtesting). The module needs to understand the structure of Kalshi contracts (ranges, payout structure).
+Backtesting Engine (src/backtesting/):
+Task: Simulate the trading strategy on historical data to evaluate its performance.
+Functionality:
+Iterate through historical data day-by-day (or event-by-event).
+On each day:
+Use historical data available up to that day to train models and generate 
+P
+m
+o
+d
+e
+l
+P 
+model
+​
+ 
+.
+Use historical Kalshi contract prices for that day to get 
+P
+K
+a
+l
+s
+h
+i
+P 
+Kalshi
+​
+ 
+ and generate signals.
+Simulate trades (buying/selling Kalshi contracts at historical bid/ask prices), accounting for transaction fees and contract payouts (
+$
+1
+$1
+ if "Yes" wins, 
+$
+0
+$0
+ if "No" wins, per contract).
+Track portfolio value, profit/loss, and other performance metrics.
+Engineer's Focus: Build a robust, event-driven or vectorized backtester. Ensure strict avoidance of lookahead bias (only using information that would have been available at the time of the decision). Accurately model Kalshi's contract mechanics and costs.
+Configuration & Utilities (config/, src/utils/):
+Task: Manage project parameters and provide common helper functions.
+Engineer's Focus: Implement a configuration system (e.g., using YAML files) so that model parameters, backtest settings, and data paths can be easily changed without modifying code. Develop utility functions for logging, date manipulation, common calculations, etc.
+Results Analysis & Reporting (results/, notebooks/):
+Task: Store and visualize backtest results.
+Engineer's Focus: Ensure backtest outputs (trade logs, equity curves, performance metrics like Sharpe ratio, max drawdown) are saved in a structured way. Potentially assist with building tools or scripts to generate visualizations.
+Key Challenges & Considerations for the Engineer:
+Kalshi Data Acquisition: This is likely the most significant initial hurdle. Reliable historical data for Kalshi contracts is paramount for meaningful backtesting.
+Lookahead Bias: Strict discipline is required in the backtester to ensure no future information leaks into past decisions.
+Modularity & Testability: Design components with clear interfaces so they can be developed and tested independently. Unit tests will be crucial.
+Performance: While not initially critical for daily data, efficient data handling and computation will be important as the dataset grows or if models become more complex.
+Collaboration with Quants: You'll work closely with team members who are focused on the statistical/financial aspects. Clear communication and understanding of model requirements are key.
+Expected Stack (Initial Thoughts):
+Python
+Pandas, NumPy, SciPy (for data manipulation and scientific computing)
+Statsmodels, ARCH (for econometric models like GARCH)
+Matplotlib, Seaborn (for plotting)
+CVXPY (if portfolio optimization is added later)
+Jupyter Notebooks (for exploration and analysis)
+Git (for version control)
+Your role is to build the reliable, scalable, and correct software framework that allows the quant team to implement, test, and refine their trading ideas. Please refer to the provided directory structure for a proposed layout of the codebase.
 
-**1. Project Goal**
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{booktabs} % For better tables
+\geometry{a4paper, margin=1in}
 
-To develop and backtest algorithmic trading strategies for event contracts listed on the Kalshi prediction market platform (kalshi.com), aiming to identify and exploit potential mispricings or predictable patterns. The initial motivation stems from a quantitative research internship challenge involving trading $500 on Kalshi.
+\title{MS\&E 244 Project Outline: \\ Statistical Arbitrage via Volatility-Adjusted Distributional Mispricing in Kalshi S\&P 500 Range Contracts}
+\author{Omar Abul-Hassan, Zijian Luo, Josh Bowden, Xiaoli Ma }
+\date{May 6, 2025}
 
-**2. Motivation & Context**
+\begin{document}
+\maketitle
+\pagenumbering{gobble}
+\newpage
+\pagenumbering{arabic}
 
-Kalshi offers contracts based on the outcome of real-world events (economic indicators, weather, politics, etc.). These contracts trade between $0.01 and $0.99, representing the market's perceived probability of the event occurring. Prices fluctuate based on new information and trader activity. This project aims to use data analysis and quantitative techniques to develop strategies that can systematically generate profit by trading these contracts. The immediate context is an internship task, but the broader goal is to explore algorithmic trading in prediction markets.
+\section*{TL;DR}
+We propose a statistical arbitrage strategy for Kalshi's daily S\&P 500 price range contracts. The core idea is to:
+\begin{enumerate}
+    \item Forecast the S\&P 500's end-of-day (EOD) price distribution using volatility models (e.g., GARCH) trained on primary S\&P 500 market data.
+    \item Calculate our model's probability ($P_{model}$) for each Kalshi S\&P 500 range.
+    \item Compare $P_{model}$ with Kalshi's market-implied probability ($P_{Kalshi}$, derived from contract prices).
+    \item Trade contracts where $P_{model}$ significantly diverges from $P_{Kalshi}$, exploiting perceived mispricings.
+\end{enumerate}
+This is "statistical" arbitrage because we bet on our model's superior probabilistic forecast over the Kalshi market's, aiming for positive expected value over many trades, not risk-free profit. We hypothesize that Kalshi markets, potentially with a broader or less institutionally-focused audience, may incorporate information from the underlying S\&P 500 market with a lag or less efficiency. Our model, trained directly on the more liquid and information-rich S\&P 500 data, aims to make more informed probabilistic bets on Kalshi. Success hinges on accurate volatility/distribution forecasting and robust backtesting against historical Kalshi contract data.
 
-**3. Core Concept**
+\section{Introduction}
+This project develops a quantitative trading strategy for Kalshi's daily S\&P 500 price range contracts. These event derivatives allow betting on the S\&P 500's closing price falling within specific ranges. The "Yes" contract price (1¢-99¢) reflects the market-implied probability of the event. Our strategy aims to identify and exploit discrepancies between these market-implied probabilities and those derived from a proprietary model of the S\&P 500's EOD price distribution. This involves statistical arbitrage: systematically trading based on perceived probabilistic mispricings, seeking positive long-term expected returns.
 
-The system focuses on:
-    a) Ingesting relevant data (e.g., underlying event data like weather forecasts or financial index prices, and Kalshi contract price data).
-    b) Implementing trading strategies that analyze this data to estimate the "true" probability of a contract resolving to YES.
-    c) Comparing the strategy's estimated probability to the market's implied probability (derived from bid/ask prices).
-    d) Generating trade signals (BUY YES, BUY NO) when a significant discrepancy (potential mispricing) is identified.
-    e) Simulating the execution of these trades against historical data to evaluate strategy performance before live deployment.
+\section{Proposed Strategy Idea}
 
-**4. Current Implementation - Backtesting Framework**
+\subsection{Core Concept: Statistical Arbitrage in Probabilities}
+The strategy exploits differences between our model-derived probabilities ($P_{model}$) and Kalshi's market-implied probabilities ($P_{Kalshi}$) for S\&P 500 EOD price ranges.
+\begin{enumerate}
+    \item \textbf{Forecast S\&P 500 EOD Distribution:} Model daily S\&P 500 volatility (e.g., GARCH) and use it to construct a probability distribution (e.g., Normal, Student's t) for the EOD price.
+    \item \textbf{Calculate Model Probabilities ($P_{model}$):} Integrate the forecasted PDF over each Kalshi range $[L_i, U_i)$ to get $P_{model}(\text{Range}_i)$.
+    \item \textbf{Extract Market Probabilities ($P_{Kalshi}$):} $P_{Kalshi\_ask}(\text{Yes for Range}_i) = \text{Ask Price}_i / 100$.
+    \item \textbf{Identify Mispricing \& Trade:} If $|P_{model}(\text{Range}_i) - P_{Kalshi}(\text{Range}_i)|$ exceeds a threshold (covering costs and desired edge), trade accordingly:
+        \begin{itemize}
+            \item If $P_{model} > P_{Kalshi\_ask}$: Buy "Yes".
+            \item If $P_{model} < P_{Kalshi\_bid}$: Buy "No" (or Sell "Yes").
+        \end{itemize}
+    \item \textbf{Portfolio Approach:} Potentially construct portfolios across multiple ranges, overweighting model-favored ranges and underweighting/shorting others to bet on the relative accuracy of our model's distribution shape.
+\end{enumerate}
+The "arbitrage" is statistical: we believe our $P_{model}$ is, on average, a better estimate of true probability than $P_{Kalshi}$, leading to positive expected profit over repeated trades.
 
-A Python-based backtesting framework has been developed to simulate strategy performance.
+\subsection{Modeling and Implementation Details}
+\begin{itemize}
+    \item \textbf{Volatility Model:} GARCH(1,1) or similar: $\sigma_t^2 = \omega + \alpha_1 \epsilon_{t-1}^2 + \beta_1 \sigma_{t-1}^2$.
+    \item \textbf{Distribution:} Forecasted return $r_{T+1} \sim D(\hat{\mu}_{T+1}, \hat{\sigma}_{T+1}^2)$, where $D$ could be Normal or Student's t.
+    \item \textbf{Signal Threshold:} e.g., $|P_{model} - P_{Kalshi}| > \text{transaction\_cost_equiv} + \text{min\_edge}$.
+    \item \textbf{Costs:} Kalshi fees and bid-ask spreads will be modeled in backtests.
+\end{itemize}
 
-    **4.1. Overall Purpose:**
-    The framework takes historical market data and strategy logic as input, simulates the process of making trades over time, tracks portfolio performance (cash, positions, P&L), and provides results for analysis.
+\section{Data Requirements}
+\begin{enumerate}
+    \item \textbf{S\&P 500 Index Data:} Daily (O,H,L,C,V) from course/FRED. (e.g., 2000-Present).
+    \item \textbf{Volatility Data (VIX):} Daily VIX closing prices (FRED).
+    \item \textbf{Kalshi Contract Data (Self-Acquired/Simulated):} CRITICAL - Historical (daily or intraday) bid, ask, last prices, and range definitions for S\&P 500 daily range contracts. This is key for backtesting.
+\end{enumerate}
+Standard preprocessing (alignment, returns) and rolling-window training for models will be used to avoid lookahead bias.
 
-    **4.2. Directory Structure:**
-    kalshi_backtester/
-    ├── data/                     # Stores historical data files (currently placeholder CSV)
-    ├── backtester/               # Core framework components
-    │   ├── data_handler.py       # Loads and streams historical data
-    │   ├── engine.py             # Main backtesting loop orchestration
-    │   ├── execution.py          # Simulates order execution and fees
-    │   ├── portfolio.py          # Manages portfolio state (cash, positions, PnL, settlement)
-    │   └── performance.py        # (Planned) Calculates performance metrics
-    ├── strategies/               # Strategy implementations
-    │   ├── base_strategy.py      # Abstract base class for strategies
-    │   └── temperature.py        # Current Temperature strategy implementation
-    ├── utils/                    # (Planned) Utility functions
-    ├── config.py                 # Configuration (paths, parameters, fees)
-    └── run_backtest.py           # Main script to configure and run a backtest
+\section{Related Work}
+This project draws from:
+\begin{itemize}
+    \item Volatility Forecasting (e.g., Poon \& Granger, 2003; GARCH models).
+    \item Prediction Markets/Event Derivatives (e.g., Wolfers \& Zitzewitz, 2004).
+    \item Statistical Arbitrage (identifying relative mispricings based on models).
+\end{itemize}
+Our contribution is applying these to Kalshi's S\&P 500 range contracts, focusing on robust distributional forecasting to find statistical arbitrage opportunities.
 
-    **4.3. Component Breakdown:**
-        *   `run_backtest.py`: Entry point. Initializes all components based on `config.py` and starts the `BacktestingEngine`. Displays final results.
-        *   `config.py`: Central place for setting parameters like data paths, initial cash, date ranges, fees, and strategy-specific parameters.
-        *   `backtester/data_handler.py`: Loads data from CSV files located in the `data/` directory. Expects a timestamp index and specific column names. Provides data tick-by-tick to the engine. Handles date parsing.
-        *   `backtester/engine.py`: The main simulation loop. Gets data ticks, calls the strategy for signals, passes signals to the portfolio, passes resulting orders to the execution handler, passes fills back to the portfolio, and handles MTM updates and final settlement.
-        *   `strategies/base_strategy.py`: Defines the interface that all strategy classes must implement (`generate_signals` method).
-        *   `strategies/temperature.py`: The currently implemented strategy. Analyzes weather forecasts and observed temperatures against Kalshi temperature bracket market prices.
-        *   `backtester/portfolio.py`: Tracks cash balance and contract positions for each market ticker. Processes signals into potential orders. Updates its state based on fill events received from the execution handler. Calculates mark-to-market portfolio value and handles final position settlement based on outcome data.
-        *   `backtester/execution.py`: Takes an order and current market prices, simulates whether the order would fill (based on market/limit logic and available prices), calculates execution price, and applies trading fees based on the model defined in `config.py`. Returns a fill event if successful.
+\section{Evaluation and "Excellent Project" Potential}
+Performance will be evaluated via Sharpe ratio, profit factor, max drawdown, etc., against benchmarks.
+"Excellent" status could involve:
+\begin{itemize}
+    \item Advanced volatility/distribution models (e.g., ML for parameters, non-standard distributions).
+    \item Rigorous backtesting with realistic Kalshi execution assumptions.
+    \item Deep analysis of mispricing sources and portfolio construction across ranges.
+    \item Demonstrating statistically and economically significant alpha.
+\end{itemize}
 
-    **4.4 Flow:**
-    `run_backtest.py` -> Creates `DataHandler`, `Strategy`, `Portfolio`, `ExecutionHandler` -> Creates `BacktestingEngine` -> `Engine` runs loop: (`DataHandler` -> `Engine` -> `Strategy` -> `Engine` -> `Portfolio` -> `Engine` -> `ExecutionHandler` -> `Engine` -> `Portfolio`) -> `Engine` calls final `Portfolio.settle_positions` -> `run_backtest.py` displays results.
+\end{document}
 
-**5. Implemented Strategy (Temperature)**
-
-    *   **Goal:** Trade Kalshi's daily high-temperature bracket contracts (e.g., "Highest temp in NYC today 62-63?").
-    *   **Inputs (from Data):** NWS high temperature forecast (`nws_forecast_high`), highest observed temperature so far (`observed_temp_high_so_far`), Kalshi bracket market bid/ask prices (e.g., `kalshi_bracket_62_63_yes_bid`, `kalshi_bracket_62_63_no_ask`).
-    *   **Logic:**
-        1.  For each target bracket defined in `config.py`:
-        2.  Estimate the probability of the final high temperature falling within the bracket using a normal distribution (`scipy.stats.norm.cdf`). The distribution is centered on the `nws_forecast_high` with a standard deviation (`forecast_std_dev` from config) representing forecast uncertainty.
-        3.  The probability calculation is constrained by the `observed_temp_high_so_far` – the probability of the high falling below the already observed high is zero.
-        4.  Compare this `estimated_prob_yes` with the market's implied probability (derived from current bid/ask prices, currently using comparison against `yes_ask_price` for buying YES and `yes_bid_price` for buying NO).
-        5.  If the absolute difference between the estimated probability and the relevant market price (ask for buying YES, bid for selling YES/buying NO) exceeds a `confidence_threshold` (from config):
-            *   Generate a BUY YES signal if the estimate is significantly higher than the market ask.
-            *   Generate a BUY NO signal if the estimate is significantly lower than the market bid.
-        6.  Signals include quantity (`trade_quantity` from config) and are currently simulated as MARKET orders.
-        7.  Basic position limits (`max_position_per_bracket`) are checked before generating signals.
-
-**6. Data**
-
-    *   **Current:** The system currently runs using a small, manually created placeholder CSV file (`data/combined_market_data.csv`). This file includes fabricated timestamped data for NWS forecasts, observed highs, Kalshi bracket bid/asks, and a final settlement temperature. **The results from this data are purely illustrative of the framework's function, not indicative of real performance.**
-    *   **Required:** For meaningful backtesting, real historical data is essential. This requires:
-        *   **Kalshi Data:** Timestamped historical bid/ask price data for the specific Kalshi contracts being tested (e.g., `TEMP-NYC-24APR15-B62.5`). This needs to be sourced, potentially via the official Kalshi API or other means. Resolution should be frequent (e.g., minutes or seconds).
-        *   **Underlying Data:** Timestamped historical data corresponding to the Kalshi contract's underlying event.
-            *   *For Temperature:* Historical NWS forecasts (e.g., hourly max temp predictions for KNYC), historical NWS actual observations (minute or 5-minute resolution for KNYC if possible), and the official Daily Climatological Report high for settlement.
-            *   *For SPX Volatility:* Historical minute-resolution SPY price/volume data and SPX index price data.
-        *   **Format:** The data needs to be cleaned, merged based on timestamp, and formatted into a single CSV or DataFrame per backtest run, with columns matching the names expected by `DataHandler`, `Engine._extract_prices_from_data`, and the `Strategy` (e.g., `nws_forecast_high`, `kalshi_bracket_62_63_yes_bid`, `actual_settlement_high`, etc.).
-
-**7. Current Status & Results**
-
-    *   The backtesting framework successfully runs end-to-end with the placeholder data.
-    *   It loads data, generates signals based on the Temperature strategy, simulates market order execution with fees, updates portfolio state, and calculates final P&L based on settlement.
-    *   The current results on placeholder data show a loss, which is expected given the fabricated inputs.
-
-**8. Future Strategy Ideas**
-
-    *   **SPX Volatility:** Adapt the logic from the separate `kalshi-trading` codebase (which uses Random Forest to predict afternoon SPX volatility based on morning activity) into a new strategy class within this framework.
-    *   **Temperature Refinements:** Incorporate insights from the "Unofficial Guide to Temperature Markets" regarding NWS station types (hourly vs. 5-min), rounding errors, and the potential limitations of real-time NWS feeds for precise prediction. This could involve more complex probability modeling or focusing purely on pre-day forecasting.

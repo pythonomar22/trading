@@ -1,0 +1,596 @@
+GetEvents
+get
+https://api.elections.kalshi.com/trade-api/v2/events
+Endpoint for getting data about all events.
+
+Query Params
+limit
+int64
+1 to 200
+Parameter to specify the number of results per page. Defaults to 100.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like series_ticker was passed in the original query they must be passed again.
+
+status
+string
+Restricts the events to those with certain statuses, as a comma separated list.
+The following values are accepted: unopened, open, closed, settled.
+
+series_ticker
+string
+Series ticker to retrieve contracts for.
+
+with_nested_markets
+boolean
+If the markets belonging to the events should be added in the response as a nested field in this event.
+
+
+Response
+
+200
+Updated 3 months ago
+
+DeleteRFQ
+GetEvent
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/events"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+GetEvent
+get
+https://api.elections.kalshi.com/trade-api/v2/events/{event_ticker}
+Endpoint for getting data about an event by its ticker.
+
+Path Params
+event_ticker
+string
+required
+Should be filled with the ticker of the event.
+
+Query Params
+with_nested_markets
+boolean
+If the markets belonging to the events should be added in the response as a nested field in this event.
+
+
+Response
+
+200
+Updated 3 months ago
+
+GetEvents
+GetMarkets
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/events/event_ticker"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetMarkets
+get
+https://api.elections.kalshi.com/trade-api/v2/markets
+Endpoint for listing and discovering markets on Kalshi.
+
+Query Params
+limit
+int64
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like tickers, max_ts or min_ts were passed in the original query they must be passed again.
+
+event_ticker
+string
+Event ticker to retrieve markets for.
+
+series_ticker
+string
+Series ticker to retrieve contracts for.
+
+max_close_ts
+int64
+Restricts the markets to those that are closing in or before this timestamp.
+
+min_close_ts
+int64
+Restricts the markets to those that are closing in or after this timestamp.
+
+status
+string
+Restricts the markets to those with certain statuses, as a comma separated list.
+The following values are accepted: unopened, open, closed, settled.
+
+tickers
+string
+Restricts the markets to those with certain tickers, as a comma separated list.
+
+Response
+
+200
+Updated 3 months ago
+
+GetEvent
+GetTrades
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/markets"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetTrades
+get
+https://api.elections.kalshi.com/trade-api/v2/markets/trades
+Endpoint for getting all trades for all markets.
+
+Query Params
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like ticker, max_ts or min_ts were passed in the original query they must be passed again.
+
+limit
+int32
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+ticker
+string
+Parameter to specify a specific market to get trades from.
+
+min_ts
+int64
+Restricts the response to trades after a unix timestamp.
+
+max_ts
+int64
+Restricts the response to trades before a unix timestamp.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMarkets
+GetMarket
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/markets/trades"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetMarket
+get
+https://api.elections.kalshi.com/trade-api/v2/markets/{ticker}
+Endpoint for getting data about a specific market.
+
+The value for the ticker path parameter should match the ticker of the target market.
+
+Path Params
+ticker
+string
+required
+Market ticker for the market being retrieved.
+
+Response
+
+200
+Updated 3 months ago
+
+GetTrades
+GetMarketOrderbook
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/markets/ticker"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+GetMarketOrderbook
+get
+https://api.elections.kalshi.com/trade-api/v2/markets/{ticker}/orderbook
+Endpoint for getting the orderbook for a market.
+
+Path Params
+ticker
+string
+required
+Market ticker.
+
+Query Params
+depth
+int32
+Depth specifies the maximum number of orderbook price levels you want to see for either side.
+Only the highest (most relevant) price level are kept.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMarket
+GetSeriesList
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/markets/ticker/orderbook"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetSeriesList
+get
+https://api.elections.kalshi.com/trade-api/v2/series/
+Endpoint for getting data about multiple series with specified filters
+
+Query Params
+category
+string
+Should be filled with the category of the series to filter on.
+
+Required: yes
+
+include_product_metadata
+boolean
+Indicate if you want to include product metadata in response.
+
+
+Response
+
+200
+Updated about 1 month ago
+
+GetMarketOrderbook
+GetSeries
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/series/"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+GetSeries
+get
+https://api.elections.kalshi.com/trade-api/v2/series/{series_ticker}
+Endpoint for getting data about a series by its ticker.
+
+Path Params
+series_ticker
+string
+required
+Should be filled with the ticker of the series.
+
+Response
+
+200
+Updated 3 months ago
+
+GetSeriesList
+GetMarketCandlesticks
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/series/series_ticker"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetMarketCandlesticks
+get
+https://api.elections.kalshi.com/trade-api/v2/series/{series_ticker}/markets/{ticker}/candlesticks
+Endpoint for getting the historical candlesticks for a market.
+
+The values for the series_ticker and ticker path parameters should match the series_ticker and ticker of the target market.
+The start_ts parameter will restrict candlesticks to those ending on or after provided timestamp.
+The end_ts parameter will restrict candlesticks to those ending on or before provided timestamp.
+The period_interval parameter determines the time period length of each candlestick.
+
+Path Params
+ticker
+string
+required
+Unique identifier for the market.
+
+series_ticker
+string
+required
+Unique identifier for the series.
+
+Query Params
+start_ts
+int64
+required
+Restricts the candlesticks to those covering time periods that end on or after this timestamp.
+
+end_ts
+int64
+required
+Restricts the candlesticks to those covering time periods that end on or before this timestamp.
+Must be within 5000 period_intervals after start_ts.
+
+period_interval
+int32
+required
+Specifies the length of each candlestick period, in minutes. Must be one minute, one hour, or one day.
+
+Response
+
+200
+Updated 3 months ago
+
+GetSeries
+exchange
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/series/series_ticker/markets/ticker/candlesticks"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+

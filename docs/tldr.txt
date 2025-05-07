@@ -1,0 +1,22 @@
+# Kalshi S&P 500 Statistical Arbitrage Project - TLDR
+
+The project builds a trading system for Kalshi's S&P 500 price range contracts. We forecast S&P 500 EOD price distributions, compare our model's probabilities with Kalshi's market-implied probabilities, and trade when we identify significant differences.
+
+## Quick Start
+No implementation yet, just planning phase.
+
+## Features
+- Created detailed project plan and todo list.
+
+## Technical Components
+1. Data Ingestion: S&P 500, VIX, and Kalshi contract data
+2. Statistical Modeling: GARCH for volatility, price distribution forecasting
+3. Strategy Logic: Compare model vs. market probabilities
+4. Backtesting: Simulate trades on historical data
+5. Analysis: Evaluate performance and refine strategy
+
+## How to Run
+- To install dependencies: `pip install -r kalshi_sp500_strat/requirements.txt`
+- Configure API keys in `kalshi_sp500_strat/config/api_keys.yaml`
+- Data loading and preprocessing: `python kalshi_sp500_strat/src/main_backtest.py --use-yahoo --save-data`
+- Data exploration notebook: `jupyter notebook kalshi_sp500_strat/notebooks/01_data_exploration.py`

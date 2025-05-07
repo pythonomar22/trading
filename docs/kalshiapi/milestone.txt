@@ -1,0 +1,127 @@
+GetMilestones
+get
+https://api.elections.kalshi.com/trade-api/v2/milestones/
+Endpoint for getting data about milestones with optional filtering.
+
+Query Params
+minimum_start_date
+date-time
+Minimum start date to filter milestones
+
+category
+string
+Filter by category
+
+type
+string
+Filter by type
+
+related_event_ticker
+string
+Filter by related event ticker
+
+limit
+int64
+required
+1 to 500
+Number of items to return per page
+
+cursor
+string
+Cursor for pagination
+
+Response
+
+200
+Updated 3 months ago
+
+GetUserDataTimestamp
+GetMilestone
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/milestones/"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetMilestone
+get
+https://api.elections.kalshi.com/trade-api/v2/milestones/{milestone_id}
+Endpoint for getting data about a specific milestone by its ID.
+
+Path Params
+milestone_id
+string
+required
+The ID of the milestone to get.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMilestones
+collection
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/milestones/milestone_id"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+

@@ -1,0 +1,978 @@
+GetBalance
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/balance
+Endpoint for getting the balance of a member.
+
+Response
+
+200
+Updated 3 months ago
+
+LookupTickersForMarketInMultivariateEventCollection
+GetFills
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/balance"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+GetFills
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/fills
+Endpoint for getting all fills for the member.
+
+Query Params
+ticker
+string
+Restricts the response to trades in a specific market.
+
+order_id
+uuid
+Restricts the response to trades related to a specific order.
+
+min_ts
+int64
+Restricts the response to trades after a timestamp.
+
+max_ts
+int64
+Restricts the response to trades before a timestamp.
+
+limit
+int32
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like ticker, max_ts or min_ts were passed in the original query they must be passed again.
+
+Response
+
+200
+Updated 3 months ago
+
+GetBalance
+GetOrders
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/fills"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+GetOrders
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders
+Endpoint for getting all orders
+Query Params
+ticker
+string
+Restricts the response to orders in a single market.
+
+event_ticker
+string
+Restricts the response to orders in a single event.
+
+min_ts
+int64
+Restricts the response to orders after a timestamp, formatted as a Unix Timestamp.
+
+max_ts
+int64
+Restricts the response to orders before a timestamp, formatted as a Unix Timestamp.
+
+status
+string
+Restricts the response to orders that have a certain status: resting, canceled, or executed.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like ticker, max_ts or min_ts were passed in the original query they must be passed again.
+
+limit
+int32
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+Response
+
+200
+Updated 3 months ago
+
+GetFills
+CreateOrder
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+CreateOrder
+post
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders
+Endpoint for submitting orders in a market.
+
+Body Params
+Order create input data
+
+action
+string
+required
+Specifies if this is a buy or sell order.
+
+buy_max_cost
+int64
+If type = market and action = buy, buy_max_cost represents the maximum cents that can be spent to acquire a position.
+
+client_order_id
+string
+required
+count
+int32
+required
+Number of contracts to be bought or sold.
+
+expiration_ts
+int64
+Expiration time of the order, in unix seconds.
+
+If this is not supplied, the order won't expire until explicitly cancelled.
+This is also known as Good 'Till Cancelled (GTC).
+
+If the time is in the past, the order will attempt to partially or completely fill
+and the remaining unfilled quantity will be cancelled. This is also known as Immediate-or-Cancel (IOC).
+
+If the time is in the future, the remaining unfilled quantity order will expire
+at the specified time.
+
+no_price
+int64
+Submitting price of the No side of the trade, in cents.
+Exactly one of yes_price and no_price must be passed. If both prices are passed, return 400.
+
+post_only
+boolean
+If this flag is set to true, an order will be rejected if it crosses the spread and executes.
+
+
+sell_position_floor
+int32
+SellPositionFloor will not let you flip position for a market order if set to 0.
+
+side
+string
+required
+Specifies if this is a 'yes' or 'no' order.
+
+ticker
+string
+required
+The ticker of the market the order will be placed in.
+
+type
+string
+required
+Specifies if this is a "market" or a "limit" order.
+Note that either the Yes Price or the No Price must be provided for limit orders.
+
+yes_price
+int64
+Submitting price of the Yes side of the trade, in cents.
+Exactly one of yes_price and no_price must be passed. If both prices are passed, return 400.
+
+Response
+
+201
+Updated 3 months ago
+
+GetOrders
+BatchCreateOrders
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.post(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+
+BatchCreateOrders
+post
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/batched
+Endpoint for submitting a batch of orders.
+
+Each order in the batch is counted against the total rate limit for order operations.
+Consequently, the size of the batch is capped by the current per-second rate-limit
+configuration applicable to the user.
+
+At the moment of writing, the limit is 20 orders per batch.
+Available to members with advanced access only.
+
+Body Params
+Batch order create input data.
+
+orders
+array of objects
+required
+An array of individual orders to place.
+
+
+ADD object
+Response
+
+201
+Updated 3 months ago
+
+CreateOrder
+BatchCancelOrders
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/batched"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.post(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+
+BatchCancelOrders
+delete
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/batched
+Endpoint for cancelling up to 20 orders at once.
+Available to members with advanced access only.
+
+Body Params
+Batch orders cancel input data.
+
+ids
+array of uuids
+required
+An array of order IDs to cancel.
+
+
+ADD uuid
+Response
+
+200
+Updated 3 months ago
+
+BatchCreateOrders
+GetOrder
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/batched"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.delete(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+GetOrder
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/{order_id}
+Endpoint for getting a single order.
+
+Path Params
+order_id
+uuid
+required
+Order_id input for the current order.
+
+Response
+
+200
+Updated 3 months ago
+
+BatchCancelOrders
+CancelOrder
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/order_id"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+CancelOrder
+delete
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/{order_id}
+Endpoint for canceling orders.
+
+The value for the orderId should match the id field of the order you want to decrease.
+Commonly, DELETE-type endpoints return 204 status with no body content on success.
+But we can't completely delete the order, as it may be partially filled already.
+Instead, the DeleteOrder endpoint reduce the order completely,
+essentially zeroing the remaining resting contracts on it.
+The zeroed order is returned on the response payload as a form of validation for the client.
+
+Path Params
+order_id
+uuid
+required
+Order_id input for the current order.
+
+Response
+
+200
+Updated 3 months ago
+
+GetOrder
+AmendOrder
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/order_id"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.delete(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+mendOrder
+post
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/{order_id}/amend
+Endpoint for amending the max number of fillable contracts and/or price in an existing order.
+
+Path Params
+order_id
+uuid
+required
+ID of the order to be amended.
+
+Body Params
+Order data
+
+action
+string
+required
+Specifies if this is a buy or sell order. Cannot be amended and is validated against original order.
+
+client_order_id
+string
+required
+count
+int32
+required
+Number of contracts to be bought or sold. This is the max number of possible filled contracts.
+
+no_price
+int64
+Submitting price of the No side of the trade, in cents.
+Exactly one of yes_price and no_price must be passed. If both prices are passed, return 400.
+
+side
+string
+required
+Specifies if this is a 'yes' or 'no' order. Cannot be amended and is validated against original order.
+
+ticker
+string
+required
+The ticker of the market the order will be placed in. Cannot be amended and is validated against original order.
+
+updated_client_order_id
+string
+required
+yes_price
+int64
+Submitting price of the Yes side of the trade, in cents.
+Exactly one of yes_price and no_price must be passed. If both prices are passed, return 400.
+
+Response
+
+201
+Updated 3 months ago
+
+CancelOrder
+DecreaseOrder
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/order_id/amend"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.post(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+
+DecreaseOrder
+post
+https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/{order_id}/decrease
+Endpoint for decreasing the number of contracts in an existing order.
+This is the only kind of edit available on order quantity.
+Cancelling an order is equivalent to decreasing an order amount to zero.
+
+Path Params
+order_id
+uuid
+required
+ID of the order to be decreased.
+
+Body Params
+Order data
+
+reduce_by
+int32
+Number of contracts to decrease the order's count by.
+One of reduce_by or reduce_to must be provided.
+
+reduce_to
+int32
+Number of contracts to decrease the order to. If the orders remaining count is lower, it does nothing.
+One of reduce_by or reduce_to must be provided
+
+Response
+
+201
+Updated 3 months ago
+
+AmendOrder
+GetPositions
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/orders/order_id/decrease"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.post(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+
+GetPositions
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/positions
+Endpoint for getting all market positions for the member.
+
+Query Params
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+The cursor does not store any filters, so if any filter parameters like settlement_status, ticker, or event_ticker were passed in the original query they must be passed again.
+
+limit
+int32
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+count_filter
+string
+Restricts the positions to those with any of following fields with non-zero values, as a comma separated list.
+The following values are accepted: position, total_traded, resting_order_count
+
+settlement_status
+string
+Settlement status of the markets to return. Defaults to unsettled.
+all SettlementStatusAll
+settled SettlementStatusSettled
+unsettled SettlementStatusUnsettled
+
+
+ticker
+string
+Ticker of desired positions.
+
+event_ticker
+string
+Event ticker of desired positions.
+
+Response
+
+200
+Updated 3 months ago
+
+DecreaseOrder
+GetPortfolioSettlements
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/positions"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+GetPortfolioSettlements
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/settlements
+Endpoint for getting the member's settlements historical track.
+
+Query Params
+limit
+int64
+1 to 1000
+Parameter to specify the number of results per page. Defaults to 100.
+
+min_ts
+int64
+Restricts the response to settlements after a timestamp.
+
+max_ts
+int64
+Restricts the response to settlements before a timestamp.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+So this optional parameter, when filled, should be filled with the cursor string returned in a previous request to this end-point.
+Filling this would basically tell the api to get the next page containing the number of records passed on the limit parameter.
+On the other side not filling it tells the api you want to get the first page for another query.
+
+Response
+
+200
+Updated 3 months ago
+
+GetPositions
+GetPortfolioRestingOrderTotalValue
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/settlements"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetPortfolioRestingOrderTotalValue
+get
+https://api.elections.kalshi.com/trade-api/v2/portfolio/summary/total_resting_order_value
+Endpoint for getting the total value, in cents, of resting orders.
+This endpoint is only intended for use by FCM members (rare).
+Note: If you're uncertain about this endpoint, it likely does not apply to you.
+
+Response
+
+200
+Updated 3 months ago
+
+GetPortfolioSettlements
+structured_target
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/portfolio/summary/total_resting_order_value"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+
+GetStructuredTarget
+get
+https://api.elections.kalshi.com/trade-api/v2/structured_targets/{structured_target_id}
+Endpoint for getting data about a specific structured target by its ID.
+
+Path Params
+structured_target_id
+string
+required
+The ID of the structured target to get.
+
+Response
+
+200
+Updated 3 months ago
+
+GetPortfolioRestingOrderTotalValue
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/structured_targets/structured_target_id"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+

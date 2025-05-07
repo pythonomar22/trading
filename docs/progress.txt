@@ -1,0 +1,63 @@
+# Statistical Arbitrage Project: Kalshi S&P 500 Range Contracts
+
+## Project Components Todo List
+
+### 1. Data Ingestion and Management
+- [ ] Set up data pipeline for S&P 500 index (Daily OHLCV)
+- [ ] Set up data pipeline for VIX index (Daily closing prices)
+- [ ] Implement API integration with Kalshi for historical contract data
+- [ ] Set up data pipeline for Kalshi S&P 500 range contracts
+  - [ ] Range definitions
+  - [ ] Bid/ask/last prices with timestamps
+  - [ ] Settlement times and outcomes
+- [ ] Design database schema for storing and accessing all data
+- [ ] Implement data cleaning and preprocessing utilities
+- [ ] Create timestamp alignment utilities for different data sources
+- [ ] Implement missing value handling
+
+### 2. Statistical Modeling
+- [ ] Implement GARCH(1,1) model for volatility forecasting
+- [ ] Implement distribution fitting (Normal, Student's t) for EOD price
+- [ ] Develop rolling window training approach to avoid lookahead bias
+- [ ] Create probability calculation module for S&P 500 EOD price ranges
+- [ ] Implement model validation and performance metrics
+- [ ] Design interface for model output to strategy module
+
+### 3. Strategy Logic & Signal Generation
+- [ ] Create module to calculate model probabilities (P_model)
+- [ ] Implement logic to extract Kalshi market-implied probabilities (P_Kalshi)
+- [ ] Develop comparison logic between P_model and P_Kalshi
+- [ ] Implement trading signal generation with configurable thresholds
+- [ ] Account for transaction costs in signal generation
+- [ ] Design position sizing logic
+- [ ] Implement portfolio approach for multiple ranges (optional)
+
+### 4. Backtesting Engine
+- [ ] Build event-driven or vectorized backtester
+- [ ] Implement strict temporal logic to avoid lookahead bias
+- [ ] Model Kalshi contract mechanics accurately
+- [ ] Account for transaction fees and contract payouts
+- [ ] Track portfolio value, profit/loss, and other performance metrics
+- [ ] Implement risk management features
+- [ ] Create trade logging functionality
+
+### 5. Configuration & Utilities
+- [ ] Set up YAML-based configuration system
+- [ ] Create logging utilities
+- [ ] Implement date manipulation utilities
+- [ ] Develop common calculation helpers
+- [ ] Set up environment and dependency management
+
+### 6. Results Analysis & Reporting
+- [ ] Create structured output format for backtest results
+- [ ] Implement performance metrics calculations (Sharpe, max drawdown, etc.)
+- [ ] Develop visualization tools for equity curves
+- [ ] Build dashboards for strategy performance analysis
+- [ ] Create export functionality for results
+
+### 7. Project Management & Documentation
+- [ ] Set up version control and repository structure
+- [ ] Create documentation for code, models, and architecture
+- [ ] Develop testing infrastructure for all modules
+- [ ] Establish continuous integration pipeline (optional)
+- [ ] Create user guides for running models and backtests

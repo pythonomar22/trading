@@ -1,0 +1,173 @@
+GetExchangeAnnouncements
+get
+https://api.elections.kalshi.com/trade-api/v2/exchange/announcements
+Endpoint for getting all exchange-wide announcements.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMarketCandlesticks
+GetExchangeSchedule
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/exchange/announcements"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+
+
+GetExchangeSchedule
+get
+https://api.elections.kalshi.com/trade-api/v2/exchange/schedule
+Endpoint for getting the exchange schedule.
+
+Response
+
+200
+Updated 3 months ago
+
+GetExchangeAnnouncements
+GetExchangeStatus
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/exchange/schedule"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+
+
+GetExchangeStatus
+get
+https://api.elections.kalshi.com/trade-api/v2/exchange/status
+Endpoint for getting the exchange status.
+
+Response
+
+200
+Updated 3 months ago
+
+GetExchangeSchedule
+GetUserDataTimestamp
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/exchange/status"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+
+
+GetUserDataTimestamp
+get
+https://api.elections.kalshi.com/trade-api/v2/exchange/user_data_timestamp
+There is typically a short delay before exchange events are reflected in the API endpoints. Whenever possible, combine API responses to PUT/POST/DELETE requests with websocket data to obtain the most accurate view of the exchange state. This endpoint provides an approximate indication of when the data from the following endpoints was last validated.
+GetBalance, GetOrder(s), GetFills, GetPositions
+
+Response
+
+200
+Updated about 1 month ago
+
+GetExchangeStatus
+milestone
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/exchange/user_data_timestamp"
+4
+​
+5
+response = requests.get(url)
+6
+​
+7
+print(response.text)
+
+
+

@@ -1,0 +1,5 @@
+Be minimalistic as possible. Design with simplicity in mind.
+
+Whenever you make changes, edit both docs/progress.txt and docs/tldr.txt. docs/progress.txt should be an in-depth technical to do list and log
+of what you've implemented so far. docs/tldr.txt should be a document that has one sentence corresponding to each new feature after adding a new feature, 
+and a tldr about how to run the new changes if it affects the command to run something.

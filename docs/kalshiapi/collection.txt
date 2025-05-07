@@ -1,0 +1,256 @@
+GetMultivariateEventCollections
+get
+https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/
+Endpoint for getting data about multivariate event collections.
+
+Query Params
+status
+string
+Only return collections of a certain status. Can be unopened, open, or closed
+
+associated_event_ticker
+string
+Only return collections associated with a particular event ticker.
+
+series_ticker
+string
+Only return collections with a particular series ticker.
+
+limit
+int64
+1 to 200
+Specify the maximum number of results.
+
+cursor
+string
+The Cursor represents a pointer to the next page of records in the pagination.
+This optional parameter, when filled, should be filled with the cursor string returned in a previous request to
+this end-point.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMilestone
+GetMultivariateEventCollection
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+GetMultivariateEventCollection
+get
+https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/{collection_ticker}
+Endpoint for getting data about a multivariate event collection by its ticker.
+
+Path Params
+collection_ticker
+string
+required
+The ticker of the collection to get.
+
+Response
+
+200
+Updated 3 months ago
+
+GetMultivariateEventCollections
+CreateMarketInMultivariateEventCollection
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/collection_ticker"
+4
+​
+5
+headers = {"accept": "application/json"}
+6
+​
+7
+response = requests.get(url, headers=headers)
+8
+​
+9
+print(response.text)
+
+
+
+CreateMarketInMultivariateEventCollection
+post
+https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/{collection_ticker}
+Endpoint for looking up an individual market in a multivariate event collection.
+This endpoint must be hit at least once before trading or looking up a market.
+
+Path Params
+collection_ticker
+string
+required
+The collection to create the market in.
+
+Body Params
+selected_markets
+array of objects
+required
+
+ADD object
+Response
+
+200
+Updated 3 months ago
+
+GetMultivariateEventCollection
+GetMultivariateEventCollectionLookupHistory
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/collection_ticker"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.post(url, headers=headers)
+11
+​
+12
+print(response.text)
+
+
+
+LookupTickersForMarketInMultivariateEventCollection
+put
+https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/{collection_ticker}/lookup
+Endpoint for looking up an individual market in a multivariate event collection.
+
+If CreateMarketInMultivariateEventCollection has never been hit with that variable combination before, this
+will return a 404.
+
+Path Params
+collection_ticker
+string
+required
+The collection to look up the market in.
+
+Body Params
+selected_markets
+array of objects
+required
+
+ADD object
+Response
+
+200
+Updated 3 months ago
+
+GetMultivariateEventCollectionLookupHistory
+portfolio
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Request
+python -m pip install requests
+1
+import requests
+2
+​
+3
+url = "https://api.elections.kalshi.com/trade-api/v2/multivariate_event_collections/collection_ticker/lookup"
+4
+​
+5
+headers = {
+6
+    "accept": "application/json",
+7
+    "content-type": "application/json"
+8
+}
+9
+​
+10
+response = requests.put(url, headers=headers)
+11
+​
+12
+print(response.text)
+
