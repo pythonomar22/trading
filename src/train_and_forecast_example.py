@@ -5,18 +5,22 @@ and building a price distribution for one period.
 """
 import pandas as pd
 import numpy as np
-# Ensure src is in PYTHONPATH or files are in the same directory when running.
-# If running from `src` directory, direct imports should work.
-from data_processing import get_processed_data
-from volatility_modeling import fit_garch_model, forecast_volatility, save_model, load_model
-from distribution_builder import build_log_return_distribution, get_probability_for_price_range
+from data_processing import get_processed_data, DEBUG as DATA_DEBUG # Import DEBUG from module
+from volatility_modeling import fit_garch_model, forecast_volatility, save_model, DEBUG as VOL_DEBUG
+from distribution_builder import build_log_return_distribution, get_probability_for_price_range, DEBUG as DIST_DEBUG
+
+# Set DEBUG for this script, potentially overriding module-level DEBUG for this run
+SCRIPT_DEBUG = True 
+
+def dprint(*args, **kwargs):
+    """Debug print function for this script."""
+    if SCRIPT_DEBUG:
+        print("DEBUG train_example:", *args, **kwargs)
 
 def run_single_train_forecast_step(all_data, train_end_date_str, forecast_date_str,
                                    garch_p=1, garch_o=1, garch_q=1, garch_vol='GARCH', garch_dist='t',
-                                   kalshi_target_low=None, kalshi_target_high=None):
-    """
-    Performs a single step of training a GARCH model and forecasting.
-    """
+                                   kalshi_target_low=None, kalshi_target_high=None, use_exog=True):
+    """Performs a single step of training a GARCH model and forecasting."""
     print(f"\n===== Running Single Train/Forecast Step =====")
     print(f"Train end date: {train_end_date_str}, Forecast date: {forecast_date_str}")
 
@@ -27,28 +31,24 @@ def run_single_train_forecast_step(all_data, train_end_date_str, forecast_date_s
         print("CRITICAL ERROR: Forecast date must be after train end date.")
         return False
 
-    # 1. Select training data
     train_data = all_data[all_data.index <= train_end_date].copy()
-    print(f"DEBUG train_example: Training data shape: {train_data.shape} (from {train_data.index.min()} to {train_data.index.max()})")
+    dprint(f"Training data shape: {train_data.shape} (from {train_data.index.min()} to {train_data.index.max()})")
     
-    if train_data.empty or len(train_data) < 100: # Increased min data for GARCH
+    if train_data.empty or len(train_data) < 100:
         print(f"Error: Not enough training data ({len(train_data)} rows) up to {train_end_date_str}.")
         return False
 
     train_returns = train_data['log_return']
     train_exog_vix = None
-    model_uses_exog = True # Assuming GARCH-X for now, can be made configurable
-
-    if model_uses_exog:
-        train_exog_vix = train_data['vix_close'] / 100.0 # Scale VIX
+    if use_exog:
+        train_exog_vix = train_data['vix_close'] / 100.0
         if train_returns.isna().any() or train_exog_vix.isna().any():
-            print(f"DEBUG train_example: NaNs in train_returns ({train_returns.isna().sum()}) or train_exog_vix ({train_exog_vix.isna().sum()}) before fit.")
-            # These should have been handled by data_processing, but double check
+            dprint(f"NaNs in train_returns ({train_returns.isna().sum()}) or train_exog_vix ({train_exog_vix.isna().sum()}) before fit.")
             return False
 
     print(f"--- Training GARCH model using data up to {train_end_date_str} ---")
     fitted_model = fit_garch_model(train_returns, 
-                                   exog_series=train_exog_vix if model_uses_exog else None, 
+                                   exog_series=train_exog_vix if use_exog else None, 
                                    p=garch_p, o=garch_o, q=garch_q, 
                                    vol=garch_vol, dist=garch_dist)
 
@@ -59,20 +59,18 @@ def run_single_train_forecast_step(all_data, train_end_date_str, forecast_date_s
     model_filename = f"garch_{garch_vol}_{garch_p}{garch_o}{garch_q}_{garch_dist}_trained_on_{train_end_date.strftime('%Y%m%d')}.joblib"
     save_model(fitted_model, model_filename)
 
-    # 2. Prepare exog for forecasting volatility for `forecast_date`
     vix_for_forecast_input = None
-    if model_uses_exog:
+    if use_exog:
         if forecast_date not in all_data.index:
-            print(f"CRITICAL ERROR: Data for forecast_date {forecast_date_str} (needed for VIX) not found in all_data.")
+            print(f"CRITICAL ERROR: Data for forecast_date {forecast_date_str} (VIX) not found.")
             return False
-        
         vix_val_on_fc_date_raw = all_data.loc[forecast_date, 'vix_close']
-        print(f"DEBUG train_example: Raw VIX for forecast date {forecast_date_str}: {vix_val_on_fc_date_raw}")
+        dprint(f"Raw VIX for forecast date {forecast_date_str}: {vix_val_on_fc_date_raw}")
         if pd.isna(vix_val_on_fc_date_raw):
-            print(f"CRITICAL ERROR: VIX value for forecast date {forecast_date_str} is NaN in master data.")
+            print(f"CRITICAL ERROR: VIX value for forecast date {forecast_date_str} is NaN.")
             return False
         vix_for_forecast_input = vix_val_on_fc_date_raw / 100.0
-        print(f"DEBUG train_example: Scaled VIX for forecast input: {vix_for_forecast_input}")
+        dprint(f"Scaled VIX for forecast input: {vix_for_forecast_input}")
     
     print(f"--- Forecasting S&P 500 volatility for {forecast_date_str} ---")
     forecasted_stdev_series = forecast_volatility(fitted_model, 
@@ -80,69 +78,67 @@ def run_single_train_forecast_step(all_data, train_end_date_str, forecast_date_s
                                                   horizon=1)
     if forecasted_stdev_series is None or forecasted_stdev_series.empty or forecasted_stdev_series.isna().any():
         print("Volatility forecasting failed or produced NaN. Aborting step.")
-        if forecasted_stdev_series is not None: print(f"DEBUG train_example: Forecasted stdev series: {forecasted_stdev_series}")
+        if forecasted_stdev_series is not None: dprint(f"Forecasted stdev series: {forecasted_stdev_series}")
         return False
     
     forecasted_daily_vol = forecasted_stdev_series.iloc[0]
     print(f"Forecasted daily log return volatility for {forecast_date_str}: {forecasted_daily_vol:.6f}")
 
-    # 3. Build probability distribution
-    current_sp_price = train_data['close'].iloc[-1] # S&P close on train_end_date
-    forecasted_mean_log_return = 0.0 # Assumption
-    
+    current_sp_price = train_data['close'].iloc[-1]
+    forecasted_mean_log_return = 0.0
     df_t_param_from_model = None
     if garch_dist == 't':
         try:
             df_t_param_from_model = fitted_model.params['nu']
-            print(f"DEBUG train_example: Using estimated df for t-distribution: {df_t_param_from_model:.2f}")
+            dprint(f"Using estimated df for t-distribution: {df_t_param_from_model:.2f}")
         except (KeyError, AttributeError):
-            print("Warning: Could not retrieve 'nu' (df) from fitted GARCH model. Using default df=5 for t-dist if applicable.")
+            dprint("Warning: Could not retrieve 'nu' (df). Using default df=5.")
             df_t_param_from_model = 5 
 
     print(f"--- Building probability distribution for S&P 500 EOD price on {forecast_date_str} ---")
     print(f"Current S&P 500 price (close of {train_end_date_str}): {current_sp_price:.2f}")
     
     log_return_distribution = build_log_return_distribution(
-        forecasted_log_mean=forecasted_mean_log_return,
-        forecasted_log_volatility=forecasted_daily_vol,
-        dist_type=garch_dist if garch_dist in ['norm', 't'] else 'norm',
-        df_t=df_t_param_from_model if garch_dist == 't' else None
-    )
+        forecasted_log_mean, forecasted_daily_vol,
+        garch_dist if garch_dist in ['norm', 't'] else 'norm',
+        df_t_param_from_model if garch_dist == 't' else None)
     
     if log_return_distribution is None:
         print("Failed to build log return distribution. Aborting step.")
         return False
 
-    # 4. Calculate probability for a hypothetical Kalshi range
     if kalshi_target_low is not None and kalshi_target_high is not None:
         prob = get_probability_for_price_range(
             log_return_distribution, current_sp_price, kalshi_target_low, kalshi_target_high)
         print(f"Model-implied probability for S&P 500 EOD between {kalshi_target_low:.2f} and {kalshi_target_high:.2f} on {forecast_date_str}: {prob:.4f}")
     else:
-        print("No Kalshi target range provided for probability calculation in this step.")
+        dprint("No Kalshi target range provided for probability calculation in this step.")
     
     print(f"===== Step for {forecast_date_str} Completed Successfully =====")
     return True
 
-
 if __name__ == '__main__':
+    # Control verbosity from imported modules for this script run
+    # data_processing.DEBUG = SCRIPT_DEBUG # This doesn't work as DEBUG is set at module load time
+    # volatility_modeling.DEBUG = SCRIPT_DEBUG 
+    # distribution_builder.DEBUG = SCRIPT_DEBUG
+    # Instead, you'd have to modify the DEBUG flag in each imported module directly if you want
+    # this script's SCRIPT_DEBUG to control their prints when this script is run.
+    # For now, their DEBUG flags are independent.
+    
     print("########## Starting Full S&P 500 EOD Distribution Modeling Example ##########")
     master_data = get_processed_data()
 
     if master_data is not None and not master_data.empty:
-        if len(master_data) >= 102: # Need at least 100 for train, 1 for prior day, 1 for forecast day
+        if len(master_data) >= 102:
             available_dates = master_data.index.sort_values()
+            example_train_end_str = '2005-12-30'
+            example_forecast_for_str = '2006-01-03'
             
-            # Let's pick a specific period for robust testing, e.g., a few years into the data
-            # Ensure data is available for these specific dates
-            example_train_end_str = '2005-12-30' # Example, ensure this date and next are in your data
-            example_forecast_for_str = '2006-01-03' # Example, ensure this is a trading day after train_end
-            
-            # Fallback if specific dates aren't available, use relative dates
             if pd.to_datetime(example_train_end_str) not in available_dates or \
                pd.to_datetime(example_forecast_for_str) not in available_dates or \
                available_dates.get_loc(pd.to_datetime(example_forecast_for_str)) <= available_dates.get_loc(pd.to_datetime(example_train_end_str)):
-                print(f"Warning: Example dates {example_train_end_str}/{example_forecast_for_str} not suitable. Using relative dates.")
+                dprint(f"Warning: Example dates {example_train_end_str}/{example_forecast_for_str} not suitable. Using relative dates.")
                 example_train_end_str = available_dates[-2].strftime('%Y-%m-%d')
                 example_forecast_for_str = available_dates[-1].strftime('%Y-%m-%d')
 
@@ -150,23 +146,26 @@ if __name__ == '__main__':
 
             if pd.to_datetime(example_train_end_str) in master_data.index:
                  example_sp_close_on_train_end = master_data.loc[example_train_end_str, 'close']
-                 hypothetical_kalshi_low = example_sp_close_on_train_end * 0.985 # 1.5% down
-                 hypothetical_kalshi_high = example_sp_close_on_train_end * 1.015 # 1.5% up
+                 hypothetical_kalshi_low = example_sp_close_on_train_end * 0.985
+                 hypothetical_kalshi_high = example_sp_close_on_train_end * 1.015
 
                  success = run_single_train_forecast_step(
-                    master_data,
-                    train_end_date_str=example_train_end_str,
-                    forecast_date_str=example_forecast_for_str,
-                    garch_p=1, garch_o=1, garch_q=1, # GJR-GARCH style
-                    garch_vol='GARCH', # 'GARCH' with o=1 is GJR for `arch` library
-                    garch_dist='t',
-                    kalshi_target_low=hypothetical_kalshi_low,
-                    kalshi_target_high=hypothetical_kalshi_high
-                 )
-                 if success:
-                     print("\nExample run completed successfully.")
-                 else:
-                     print("\nExample run encountered errors.")
+                    master_data, example_train_end_str, example_forecast_for_str,
+                    garch_p=1, garch_o=1, garch_q=1, garch_vol='GARCH', garch_dist='t',
+                    kalshi_target_low=hypothetical_kalshi_low, kalshi_target_high=hypothetical_kalshi_high,
+                    use_exog=True) # Test with exog
+                 if success: print("\nExample run (with exog) completed successfully.")
+                 else: print("\nExample run (with exog) encountered errors.")
+                 
+                 # Example without exog
+                 # success_no_exog = run_single_train_forecast_step(
+                 #    master_data, example_train_end_str, example_forecast_for_str,
+                 #    garch_p=1, garch_o=1, garch_q=1, garch_vol='GARCH', garch_dist='t',
+                 #    kalshi_target_low=hypothetical_kalshi_low, kalshi_target_high=hypothetical_kalshi_high,
+                 #    use_exog=False)
+                 # if success_no_exog: print("\nExample run (NO exog) completed successfully.")
+                 # else: print("\nExample run (NO exog) encountered errors.")
+
             else:
                 print(f"Error: Chosen train_end_date {example_train_end_str} not found in processed data index.")
         else:
