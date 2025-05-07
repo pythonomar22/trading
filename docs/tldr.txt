@@ -3,20 +3,27 @@
 The project builds a trading system for Kalshi's S&P 500 price range contracts. We forecast S&P 500 EOD price distributions, compare our model's probabilities with Kalshi's market-implied probabilities, and trade when we identify significant differences.
 
 ## Quick Start
-No implementation yet, just planning phase.
+- To run data processing: `python src/data_processing.py`
+- To fit GARCH model and forecast: `python src/train_and_forecast_example.py`
+- To evaluate model performance: `python src/evaluate_volatility_model.py`
 
 ## Features
-- Created detailed project plan and todo list.
+- Created detailed project plan and todo list
+- Implemented data loading and preprocessing for S&P 500 and VIX
+- Built GARCH volatility models with VIX integration
+- Created distribution modeling for price probabilties
+- Implemented thorough model evaluation framework
+- Developed price range probability calculator
 
 ## Technical Components
-1. Data Ingestion: S&P 500, VIX, and Kalshi contract data
+1. Data Ingestion: S&P 500, VIX data processing pipeline
 2. Statistical Modeling: GARCH for volatility, price distribution forecasting
-3. Strategy Logic: Compare model vs. market probabilities
-4. Backtesting: Simulate trades on historical data
-5. Analysis: Evaluate performance and refine strategy
+3. Strategy Logic: Calculate model probabilities, pending Kalshi integration
+4. Evaluation: Rolling window backtesting of volatility models
+5. Analysis: Performance metrics and visualization tools
 
 ## How to Run
-- To install dependencies: `pip install -r kalshi_sp500_strat/requirements.txt`
-- Configure API keys in `kalshi_sp500_strat/config/api_keys.yaml`
-- Data loading and preprocessing: `python kalshi_sp500_strat/src/main_backtest.py --use-yahoo --save-data`
-- Data exploration notebook: `jupyter notebook kalshi_sp500_strat/notebooks/01_data_exploration.py`
+- Ensure Python 3.8+ with pandas, numpy, scipy, arch, sklearn, and matplotlib
+- Place S&P 500 data at `data/snp500.csv` and VIX data at `data/vix.csv`
+- Start with data processing script: `python src/data_processing.py`
+- Run model training example: `python src/train_and_forecast_example.py`
